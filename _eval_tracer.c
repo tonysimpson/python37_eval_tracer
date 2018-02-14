@@ -76,7 +76,7 @@ _eval_tracer_get_frame_stack_item(PyObject *self, PyObject *args)
     }
     PyObject *obj = f->f_stacktop[-(index+1)];
     if(obj == NULL) {
-		obj = null_object;
+		obj = (PyObject*)null_object;
     }
     Py_INCREF(obj);
     return obj;
@@ -100,11 +100,15 @@ _eval_tracer_get_frame_stack_depth(PyObject *self, PyObject *args)
 static PyObject *
 _eval_tracer_dict_version(PyObject *self, PyObject *args)
 {
-    PyDictObject* dict;
-    if(!PyArg_ParseTuple(args, "O!", &PyDict_Type, &dict)) {
+    PyObject* dict;
+    if(!PyArg_ParseTuple(args, "O", &dict)) {
         return NULL;
     }
-    return PyLong_FromUnsignedLong(dict->ma_version_tag);
+    if(!PyDict_CheckExact(dict)) {
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+    return PyLong_FromUnsignedLong(((PyDictObject*)dict)->ma_version_tag);
 }
 
 static PyMethodDef module_methods[] = {
